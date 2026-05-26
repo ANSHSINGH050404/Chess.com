@@ -33,23 +33,23 @@ export class Game {
   }
 
   makeMove(player: WebSocket, move: { from: string; to: string }) {
-    // Validate the move using chess.js
+    const moveCount = this.board.history().length;
 
-    if (this.board.moves.length % 2 === 0 && player !== this.player1) {
-      return; // Not player1's turn
+    if (moveCount % 2 === 0 && player !== this.player1) {
+      return;
     }
-    if (this.board.moves.length % 2 === 1 && player !== this.player2) {
-      return; // Not player2's turn
+    if (moveCount % 2 === 1 && player !== this.player2) {
+      return;
     }
 
     try {
       this.board.move(move);
     } catch (e) {
-      return; // Invalid move
+      return;
     }
 
     if (this.board.isGameOver()) {
-      this.player1.emit(
+      this.player1.send(
         JSON.stringify({
           type: GAME_OVER,
           payload: {
@@ -57,7 +57,7 @@ export class Game {
           },
         }),
       );
-      this.player2.emit(
+      this.player2.send(
         JSON.stringify({
           type: GAME_OVER,
           payload: {
@@ -68,15 +68,16 @@ export class Game {
       return;
     }
 
-    if (this.board.moves.length % 2 === 0) {
-      this.player2.emit(
+    const newMoveCount = this.board.history().length;
+    if (newMoveCount % 2 === 1) {
+      this.player2.send(
         JSON.stringify({
           type: MOVE,
           payload: move,
         }),
       );
     } else {
-      this.player1.emit(
+      this.player1.send(
         JSON.stringify({
           type: MOVE,
           payload: move,
